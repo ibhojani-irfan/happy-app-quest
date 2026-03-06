@@ -3,6 +3,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+function detectSource(url: string): string {
+  const lower = url.toLowerCase();
+  if (lower.includes('linkedin.com')) return 'linkedin';
+  if (lower.includes('seek.com')) return 'seek';
+  return 'manual';
+}
+
+// Sites that Firecrawl cannot scrape
+const BLOCKED_DOMAINS = ['linkedin.com', 'seek.com', 'seek.co'];
+
+function isBlockedSite(url: string): boolean {
+  const lower = url.toLowerCase();
+  return BLOCKED_DOMAINS.some(d => lower.includes(d));
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -18,17 +33,41 @@ Deno.serve(async (req) => {
       );
     }
 
+    let formattedUrl = url.trim();
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+
+    const source = detectSource(formattedUrl);
+
+    // For blocked sites, return partial data from URL only
+    if (isBlockedSite(formattedUrl)) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          partial: true,
+          message: `${source === 'linkedin' ? 'LinkedIn' : 'Seek'} doesn't allow automated scraping. The URL has been saved — please fill in the job details manually.`,
+          data: {
+            company: '',
+            position: '',
+            location: '',
+            salary_min: null,
+            salary_max: null,
+            url: formattedUrl,
+            source,
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // For other sites, use Firecrawl
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!apiKey) {
       return new Response(
         JSON.stringify({ success: false, error: 'Firecrawl not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    }
-
-    let formattedUrl = url.trim();
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = `https://${formattedUrl}`;
     }
 
     console.log('Scraping job URL:', formattedUrl);
@@ -50,12 +89,12 @@ Deno.serve(async (req) => {
                 company: { type: 'string', description: 'The company or employer name' },
                 position: { type: 'string', description: 'The job title or position name' },
                 location: { type: 'string', description: 'The job location (city, state, remote, etc.)' },
-                salary_min: { type: 'number', description: 'Minimum salary as integer (annual, in local currency, no symbols)' },
-                salary_max: { type: 'number', description: 'Maximum salary as integer (annual, in local currency, no symbols)' },
+                salary_min: { type: 'number', description: 'Minimum salary as integer (annual, no symbols)' },
+                salary_max: { type: 'number', description: 'Maximum salary as integer (annual, no symbols)' },
               },
               required: ['company', 'position'],
             },
-            prompt: 'Extract the job listing details from this page. Get the company name, job title/position, location, and salary range if available.',
+            prompt: 'Extract the job listing details from this page.',
           },
         ],
         onlyMainContent: true,
@@ -72,20 +111,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract the JSON data from Firecrawl response
     const extracted = data?.data?.json || data?.json || {};
-
-    console.log('Extracted job data:', extracted);
-
-    // Determine source from URL
-    let source = 'manual';
-    const lowerUrl = formattedUrl.toLowerCase();
-    if (lowerUrl.includes('linkedin.com')) source = 'linkedin';
-    else if (lowerUrl.includes('seek.com')) source = 'seek';
 
     return new Response(
       JSON.stringify({
         success: true,
+        partial: false,
         data: {
           company: extracted.company || '',
           position: extracted.position || '',
