@@ -135,6 +135,7 @@ export type Database = {
           position: string
           salary_max: number | null
           salary_min: number | null
+          source: string
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
           url: string | null
@@ -149,6 +150,7 @@ export type Database = {
           position: string
           salary_max?: number | null
           salary_min?: number | null
+          source?: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           url?: string | null
@@ -163,6 +165,7 @@ export type Database = {
           position?: string
           salary_max?: number | null
           salary_min?: number | null
+          source?: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           url?: string | null
