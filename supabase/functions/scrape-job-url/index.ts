@@ -80,23 +80,21 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: [
-          {
-            type: 'json',
-            schema: {
-              type: 'object',
-              properties: {
-                company: { type: 'string', description: 'The company or employer name' },
-                position: { type: 'string', description: 'The job title or position name' },
-                location: { type: 'string', description: 'The job location (city, state, remote, etc.)' },
-                salary_min: { type: 'number', description: 'Minimum salary as integer (annual, no symbols)' },
-                salary_max: { type: 'number', description: 'Maximum salary as integer (annual, no symbols)' },
-              },
-              required: ['company', 'position'],
+        formats: ['extract'],
+        extract: {
+          schema: {
+            type: 'object',
+            properties: {
+              company: { type: 'string', description: 'The company or employer name' },
+              position: { type: 'string', description: 'The job title or position name' },
+              location: { type: 'string', description: 'The job location (city, state, remote, etc.)' },
+              salary_min: { type: 'number', description: 'Minimum salary as integer (annual, no symbols)' },
+              salary_max: { type: 'number', description: 'Maximum salary as integer (annual, no symbols)' },
             },
-            prompt: 'Extract the job listing details from this page.',
+            required: ['company', 'position'],
           },
-        ],
+          prompt: 'Extract the job listing details from this page.',
+        },
         onlyMainContent: true,
       }),
     });
@@ -111,7 +109,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const extracted = data?.data?.json || data?.json || {};
+    const extracted = data?.data?.extract || data?.extract || {};
 
     return new Response(
       JSON.stringify({
