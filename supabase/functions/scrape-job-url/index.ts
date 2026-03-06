@@ -111,14 +111,38 @@ Deno.serve(async (req) => {
 
     const extracted = data?.data?.extract || data?.extract || {};
 
+    const company = (extracted.company || '').trim();
+    const position = (extracted.position || '').trim();
+
+    // If extraction didn't find required fields, return partial for manual entry
+    if (!company || !position) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          partial: true,
+          message: "We couldn't extract all job details from this page. Please fill in the missing information below.",
+          data: {
+            company,
+            position,
+            location: (extracted.location || '').trim(),
+            salary_min: extracted.salary_min || null,
+            salary_max: extracted.salary_max || null,
+            url: formattedUrl,
+            source,
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         partial: false,
         data: {
-          company: extracted.company || '',
-          position: extracted.position || '',
-          location: extracted.location || '',
+          company,
+          position,
+          location: (extracted.location || '').trim(),
           salary_min: extracted.salary_min || null,
           salary_max: extracted.salary_max || null,
           url: formattedUrl,

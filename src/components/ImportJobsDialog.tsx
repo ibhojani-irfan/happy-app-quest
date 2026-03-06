@@ -59,8 +59,21 @@ export function ImportJobsDialog({ open, onOpenChange }: Props) {
         return;
       }
 
-      // Full scrape succeeded — insert directly
+      // Full scrape succeeded — validate before inserting
       const job = data.data;
+      if (!job.company?.trim() || !job.position?.trim()) {
+        // Shouldn't happen now but safety net — show manual form
+        setPartialData({
+          message: "We couldn't extract all job details. Please fill in the missing information.",
+          data: job,
+        });
+        setPartialForm({
+          company: job.company || "",
+          position: job.position || "",
+          location: job.location || "",
+        });
+        return;
+      }
       await insertApplication(job);
       toast.success(`Added: ${job.position} at ${job.company}`);
       resetAndClose();
@@ -91,9 +104,14 @@ export function ImportJobsDialog({ open, onOpenChange }: Props) {
   };
 
   const insertApplication = async (job: Record<string, any>) => {
+    const company = (job.company || "").trim();
+    const position = (job.position || "").trim();
+    if (!company || !position) {
+      throw new Error("Company and Position are required. Please fill in the details.");
+    }
     const { error } = await supabase.from("applications").insert({
-      company: job.company || "Unknown Company",
-      position: job.position || "Unknown Position",
+      company,
+      position,
       url: job.url || null,
       location: job.location || null,
       salary_min: job.salary_min || null,
