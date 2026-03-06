@@ -2,13 +2,13 @@ import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Link2, FileUp, Loader2 } from "lucide-react";
+import { Link2, FileUp, Loader2, AlertCircle } from "lucide-react";
 import { parseJobCsv, parseJobJson } from "@/lib/parseJobCsv";
 import type { ApplicationStatus } from "@/lib/constants";
 
@@ -25,6 +25,13 @@ export function ImportJobsDialog({ open, onOpenChange }: Props) {
   // URL tab state
   const [jobUrl, setJobUrl] = useState("");
   const [scraping, setScraping] = useState(false);
+  const [partialData, setPartialData] = useState<{
+    message: string;
+    data: Record<string, any>;
+  } | null>(null);
+
+  // Partial fill form
+  const [partialForm, setPartialForm] = useState({ company: "", position: "", location: "" });
 
   // File tab state
   const [importResult, setImportResult] = useState<{ count: number; errors: string[] } | null>(null);
@@ -32,6 +39,7 @@ export function ImportJobsDialog({ open, onOpenChange }: Props) {
   const scrapeAndAdd = async () => {
     if (!jobUrl.trim()) return;
     setScraping(true);
+    setPartialData(null);
     try {
       const { data, error } = await supabase.functions.invoke("scrape-job-url", {
         body: { url: jobUrl.trim() },
@@ -40,30 +48,69 @@ export function ImportJobsDialog({ open, onOpenChange }: Props) {
       if (error) throw new Error(error.message);
       if (!data?.success) throw new Error(data?.error || "Failed to scrape");
 
+      // If it's a partial result (blocked site), show manual form
+      if (data.partial) {
+        setPartialData({ message: data.message, data: data.data });
+        setPartialForm({
+          company: data.data.company || "",
+          position: data.data.position || "",
+          location: data.data.location || "",
+        });
+        return;
+      }
+
+      // Full scrape succeeded — insert directly
       const job = data.data;
-      const { error: insertError } = await supabase.from("applications").insert({
-        company: job.company || "Unknown Company",
-        position: job.position || "Unknown Position",
-        url: job.url || null,
-        location: job.location || null,
-        salary_min: job.salary_min || null,
-        salary_max: job.salary_max || null,
-        status: "applied" as ApplicationStatus,
-        source: job.source || "manual",
-        user_id: user!.id,
-      });
-
-      if (insertError) throw insertError;
-
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      await insertApplication(job);
       toast.success(`Added: ${job.position} at ${job.company}`);
-      setJobUrl("");
-      onOpenChange(false);
+      resetAndClose();
     } catch (err: any) {
       toast.error(err.message || "Failed to import from URL");
     } finally {
       setScraping(false);
     }
+  };
+
+  const submitPartialForm = async () => {
+    if (!partialForm.company.trim() || !partialForm.position.trim()) {
+      toast.error("Company and Position are required");
+      return;
+    }
+    try {
+      await insertApplication({
+        ...partialData!.data,
+        company: partialForm.company.trim(),
+        position: partialForm.position.trim(),
+        location: partialForm.location.trim() || null,
+      });
+      toast.success(`Added: ${partialForm.position} at ${partialForm.company}`);
+      resetAndClose();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const insertApplication = async (job: Record<string, any>) => {
+    const { error } = await supabase.from("applications").insert({
+      company: job.company || "Unknown Company",
+      position: job.position || "Unknown Position",
+      url: job.url || null,
+      location: job.location || null,
+      salary_min: job.salary_min || null,
+      salary_max: job.salary_max || null,
+      status: "applied" as ApplicationStatus,
+      source: job.source || "manual",
+      user_id: user!.id,
+    });
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ["applications"] });
+  };
+
+  const resetAndClose = () => {
+    setJobUrl("");
+    setPartialData(null);
+    setPartialForm({ company: "", position: "", location: "" });
+    onOpenChange(false);
   };
 
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,9 +156,12 @@ export function ImportJobsDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" aria-describedby="import-dialog-desc">
         <DialogHeader>
           <DialogTitle>Import Jobs</DialogTitle>
+          <DialogDescription id="import-dialog-desc">
+            Import job applications from a URL or upload a CSV/JSON file.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="url" className="w-full">
@@ -126,25 +176,52 @@ export function ImportJobsDialog({ open, onOpenChange }: Props) {
 
           <TabsContent value="url" className="space-y-4 pt-4">
             <p className="text-sm text-muted-foreground">
-              Paste a LinkedIn or Seek job listing URL and we'll auto-fill the details.
+              Paste a job listing URL. For LinkedIn & Seek, you'll fill in details manually since those sites block automated scraping. Other job sites (Indeed, Glassdoor, company pages) will auto-fill.
             </p>
             <div className="space-y-2">
               <Label>Job URL</Label>
               <Input
                 value={jobUrl}
-                onChange={(e) => setJobUrl(e.target.value)}
+                onChange={(e) => { setJobUrl(e.target.value); setPartialData(null); }}
                 placeholder="https://www.linkedin.com/jobs/view/..."
               />
             </div>
-            <Button onClick={scrapeAndAdd} disabled={scraping || !jobUrl.trim()} className="w-full">
-              {scraping ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Extracting...
-                </>
-              ) : (
-                "Import from URL"
-              )}
-            </Button>
+
+            {!partialData && (
+              <Button onClick={scrapeAndAdd} disabled={scraping || !jobUrl.trim()} className="w-full">
+                {scraping ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Extracting...
+                  </>
+                ) : (
+                  "Import from URL"
+                )}
+              </Button>
+            )}
+
+            {partialData && (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 rounded-lg border border-warning/50 bg-warning/5 p-3">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                  <p className="text-sm text-muted-foreground">{partialData.message}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Company *</Label>
+                  <Input value={partialForm.company} onChange={(e) => setPartialForm(f => ({ ...f, company: e.target.value }))} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Position *</Label>
+                  <Input value={partialForm.position} onChange={(e) => setPartialForm(f => ({ ...f, position: e.target.value }))} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Location</Label>
+                  <Input value={partialForm.location} onChange={(e) => setPartialForm(f => ({ ...f, location: e.target.value }))} />
+                </div>
+                <Button onClick={submitPartialForm} className="w-full">
+                  Save Application
+                </Button>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="file" className="space-y-4 pt-4">
