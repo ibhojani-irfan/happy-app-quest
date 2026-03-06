@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StatusBadge } from "@/components/StatusBadge";
 import { ApplicationFormDialog } from "@/components/ApplicationFormDialog";
 import { ALL_STATUSES, STATUS_CONFIG, type ApplicationStatus } from "@/lib/constants";
-import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { ImportJobsDialog } from "@/components/ImportJobsDialog";
+import { Plus, Pencil, Trash2, ExternalLink, Download } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
@@ -24,6 +25,7 @@ export default function Applications() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editApp, setEditApp] = useState<Application | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ["applications"],
@@ -61,9 +63,14 @@ export default function Applications() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold">Applications</h1>
-        <Button onClick={() => { setEditApp(null); setDialogOpen(true); }}>
-          <Plus className="mr-2 h-4 w-4" /> Add Application
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Download className="mr-2 h-4 w-4" /> Import
+          </Button>
+          <Button onClick={() => { setEditApp(null); setDialogOpen(true); }}>
+            <Plus className="mr-2 h-4 w-4" /> Add Application
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -148,6 +155,8 @@ export default function Applications() {
         onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditApp(null); }}
         application={editApp}
       />
+
+      <ImportJobsDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }
