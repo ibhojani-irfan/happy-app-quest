@@ -1,16 +1,18 @@
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { SocialLoginButtons } from "@/components/SocialLoginButtons";
 import { toast } from "sonner";
 import { Briefcase } from "lucide-react";
 
 export default function Signup() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -32,7 +34,8 @@ export default function Signup() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Check your email to confirm your account!");
+      toast.success("Check your email for the verification code!");
+      navigate("/verify-email", { state: { email } });
     }
     setLoading(false);
   };
@@ -66,6 +69,7 @@ export default function Signup() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Creating account..." : "Create account"}
             </Button>
+            <SocialLoginButtons />
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link to="/login" className="text-primary hover:underline">Sign in</Link>
