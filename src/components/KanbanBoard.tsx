@@ -6,6 +6,7 @@ import { ALL_STATUSES, STATUS_CONFIG, type ApplicationStatus } from "@/lib/const
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, ExternalLink, GripVertical, Briefcase } from "lucide-react";
+import { SourceBadge } from "@/components/SourceBadge";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
