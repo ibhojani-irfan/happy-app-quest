@@ -13,6 +13,7 @@ import { ALL_STATUSES, STATUS_CONFIG, type ApplicationStatus } from "@/lib/const
 import { ImportJobsDialog } from "@/components/ImportJobsDialog";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { Plus, Pencil, Trash2, ExternalLink, Download, LayoutGrid, List } from "lucide-react";
+import { SourceBadge } from "@/components/SourceBadge";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
@@ -147,6 +148,7 @@ export default function Applications() {
                 <TableHead>Company</TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="hidden md:table-cell">Source</TableHead>
                 <TableHead className="hidden md:table-cell">Location</TableHead>
                 <TableHead className="hidden md:table-cell">Date Applied</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
@@ -162,6 +164,7 @@ export default function Applications() {
                   </TableCell>
                   <TableCell>{app.position}</TableCell>
                   <TableCell><StatusBadge status={app.status} /></TableCell>
+                  <TableCell className="hidden md:table-cell"><SourceBadge source={app.source} /></TableCell>
                   <TableCell className="hidden md:table-cell">{app.location || "—"}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     {app.date_applied ? format(parseISO(app.date_applied), "MMM d, yyyy") : "—"}
