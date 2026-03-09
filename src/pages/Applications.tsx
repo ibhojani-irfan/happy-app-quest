@@ -148,6 +148,7 @@ export default function Applications() {
                 <TableHead>Company</TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="hidden md:table-cell">Source</TableHead>
                 <TableHead className="hidden md:table-cell">Location</TableHead>
                 <TableHead className="hidden md:table-cell">Date Applied</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
@@ -163,6 +164,7 @@ export default function Applications() {
                   </TableCell>
                   <TableCell>{app.position}</TableCell>
                   <TableCell><StatusBadge status={app.status} /></TableCell>
+                  <TableCell className="hidden md:table-cell"><SourceBadge source={app.source} /></TableCell>
                   <TableCell className="hidden md:table-cell">{app.location || "—"}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     {app.date_applied ? format(parseISO(app.date_applied), "MMM d, yyyy") : "—"}
