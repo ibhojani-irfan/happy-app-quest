@@ -82,6 +82,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <ReadOnlyBanner />
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
       {/* Stats cards */}
