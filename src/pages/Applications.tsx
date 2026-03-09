@@ -11,10 +11,12 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ApplicationFormDialog } from "@/components/ApplicationFormDialog";
 import { ALL_STATUSES, STATUS_CONFIG, type ApplicationStatus } from "@/lib/constants";
 import { ImportJobsDialog } from "@/components/ImportJobsDialog";
-import { Plus, Pencil, Trash2, ExternalLink, Download } from "lucide-react";
+import { KanbanBoard } from "@/components/KanbanBoard";
+import { Plus, Pencil, Trash2, ExternalLink, Download, LayoutGrid, List } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
+import { cn } from "@/lib/utils";
 
 type Application = Tables<"applications">;
 
@@ -26,6 +28,7 @@ export default function Applications() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editApp, setEditApp] = useState<Application | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [view, setView] = useState<"table" | "kanban">("kanban");
 
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ["applications"],
@@ -73,28 +76,65 @@ export default function Applications() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Input
-          placeholder="Search company or position..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="sm:max-w-xs"
-        />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {ALL_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>{STATUS_CONFIG[s].label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Input
+            placeholder="Search company or position..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="sm:max-w-xs"
+          />
+          {view === "table" && (
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {ALL_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>{STATUS_CONFIG[s].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        {/* View Toggle */}
+        <div className="flex rounded-lg border bg-muted p-0.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "gap-1.5 rounded-md px-3",
+              view === "kanban" && "bg-background shadow-sm text-foreground"
+            )}
+            onClick={() => setView("kanban")}
+          >
+            <LayoutGrid className="h-4 w-4" /> Board
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "gap-1.5 rounded-md px-3",
+              view === "table" && "bg-background shadow-sm text-foreground"
+            )}
+            onClick={() => setView("table")}
+          >
+            <List className="h-4 w-4" /> Table
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">Loading...</div>
+      ) : view === "kanban" ? (
+        <KanbanBoard
+          applications={statusFilter === "all" ? applications : filtered}
+          search={search}
+          onEdit={(app) => { setEditApp(app); setDialogOpen(true); }}
+          onDelete={(id) => deleteMutation.mutate(id)}
+        />
       ) : filtered.length === 0 ? (
         <div className="py-12 text-center text-muted-foreground">
           {applications.length === 0 ? "No applications yet. Add your first one!" : "No matching applications."}
