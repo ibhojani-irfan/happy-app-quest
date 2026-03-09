@@ -25,6 +25,7 @@ type Application = Tables<"applications">;
 
 export default function Applications() {
   const { user } = useAuth();
+  const { hasAccess } = useSubscription();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
