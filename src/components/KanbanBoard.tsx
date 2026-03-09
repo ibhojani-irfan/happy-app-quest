@@ -164,6 +164,9 @@ export function KanbanBoard({ applications, onEdit, onDelete, search }: KanbanBo
                             📍 {app.location}
                           </p>
                         )}
+                        <div className="mt-1">
+                          <SourceBadge source={app.source} />
+                        </div>
                       </div>
                     </div>
 
