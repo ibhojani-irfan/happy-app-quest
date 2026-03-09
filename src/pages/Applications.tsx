@@ -13,6 +13,7 @@ import { ALL_STATUSES, STATUS_CONFIG, type ApplicationStatus } from "@/lib/const
 import { ImportJobsDialog } from "@/components/ImportJobsDialog";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { Plus, Pencil, Trash2, ExternalLink, Download, LayoutGrid, List } from "lucide-react";
+import { SourceBadge } from "@/components/SourceBadge";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
