@@ -68,13 +68,14 @@ export default function Applications() {
 
   return (
     <div className="space-y-6">
+      <ReadOnlyBanner />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold">Applications</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)}>
+          <Button variant="outline" onClick={() => setImportOpen(true)} disabled={!hasAccess}>
             <Download className="mr-2 h-4 w-4" /> Import
           </Button>
-          <Button onClick={() => { setEditApp(null); setDialogOpen(true); }}>
+          <Button onClick={() => { setEditApp(null); setDialogOpen(true); }} disabled={!hasAccess}>
             <Plus className="mr-2 h-4 w-4" /> Add Application
           </Button>
         </div>
