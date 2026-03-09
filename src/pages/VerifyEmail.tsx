@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { Briefcase, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 
 export default function VerifyEmail() {
   const { user } = useAuth();
@@ -17,16 +17,14 @@ export default function VerifyEmail() {
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
-  // If already logged in, go home
-  if (user) return <Navigate to="/" replace />;
-  // If no email in state, go to signup
-  if (!email) return <Navigate to="/signup" replace />;
-
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [cooldown]);
+
+  if (user) return <Navigate to="/" replace />;
+  if (!email) return <Navigate to="/signup" replace />;
 
   const handleVerify = async () => {
     if (otp.length !== 6) {

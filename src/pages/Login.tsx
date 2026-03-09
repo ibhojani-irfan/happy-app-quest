@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { SocialLoginButtons } from "@/components/SocialLoginButtons";
 import { toast } from "sonner";
 import { Briefcase } from "lucide-react";
 
@@ -52,6 +53,7 @@ export default function Login() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </Button>
+            <SocialLoginButtons />
             <div className="flex w-full justify-between text-sm">
               <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
               <Link to="/signup" className="text-primary hover:underline">Create account</Link>
