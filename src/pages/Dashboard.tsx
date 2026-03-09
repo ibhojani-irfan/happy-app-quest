@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { ReadOnlyBanner } from "@/components/ReadOnlyBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,6 +82,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <ReadOnlyBanner />
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
       {/* Stats cards */}

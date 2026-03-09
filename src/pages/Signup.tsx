@@ -47,8 +47,11 @@ export default function Signup() {
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Briefcase className="h-6 w-6" />
           </div>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
+            <CardTitle className="text-2xl">Create your account</CardTitle>
           <CardDescription>Start tracking your job applications</CardDescription>
+          <div className="mt-2 rounded-lg border border-[hsl(var(--info)/0.3)] bg-[hsl(var(--info)/0.05)] px-3 py-2 text-sm text-[hsl(var(--info))]">
+            🎉 Start with a <strong>14-day free trial</strong> — full access, no credit card required!
+          </div>
         </CardHeader>
         <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">
