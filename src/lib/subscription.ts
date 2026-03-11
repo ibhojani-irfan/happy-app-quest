@@ -1,15 +1,15 @@
 export const PLANS = {
   monthly: {
-    price_id: "price_1T8xnHFUacKsdY5PtyWghi5S",
-    product_id: "prod_U7CB8D5NWETZ2z",
+    price_id: "price_1T9e27FUacKsdY5PdqdISmac",
+    product_id: "prod_U7tpqFQ8JNScyH",
     name: "Monthly",
     price: 4.99,
     currency: "AUD",
     interval: "month" as const,
   },
   yearly: {
-    price_id: "price_1T8xnaFUacKsdY5PZhFxojji",
-    product_id: "prod_U7CBR6fadHde9Q",
+    price_id: "price_1T9e2cFUacKsdY5P1UEKc8zx",
+    product_id: "prod_U7tqqEV4vcBWyu",
     name: "Yearly",
     price: 50,
     currency: "AUD",
