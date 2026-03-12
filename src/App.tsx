@@ -26,7 +26,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/happy-app-quest">
         <AuthProvider>
           <SubscriptionProvider>
             <Routes>
