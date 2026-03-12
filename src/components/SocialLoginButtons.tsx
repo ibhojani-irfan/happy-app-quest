@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export function SocialLoginButtons() {
@@ -9,11 +9,14 @@ export function SocialLoginButtons() {
   const handleSocialLogin = async (provider: "google" | "apple") => {
     setLoading(provider);
     try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: `${window.location.origin}${import.meta.env.BASE_URL}`,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+        },
       });
-      if (result?.error) {
-        toast.error(result.error.message || `Failed to sign in with ${provider}`);
+      if (error) {
+        toast.error(error.message || `Failed to sign in with ${provider}`);
       }
     } catch (err: any) {
       toast.error(err.message || `Failed to sign in with ${provider}`);
