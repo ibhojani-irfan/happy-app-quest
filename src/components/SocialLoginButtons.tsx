@@ -10,7 +10,7 @@ export function SocialLoginButtons() {
     setLoading(provider);
     try {
       const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}${import.meta.env.BASE_URL}`,
       });
       if (result?.error) {
         toast.error(result.error.message || `Failed to sign in with ${provider}`);
