@@ -27,7 +27,7 @@ export default function Signup() {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
         data: { full_name: fullName },
       },
     });
